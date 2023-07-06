@@ -8,7 +8,11 @@ const app = express();
 const port = 9000;
 
 const { INFURA_RPC_ID } = process.env
+const connectDB = require('./db');
+const Event = require('./models/event');
+const cors = require('cors')
 
+app.use(cors())
 
 // Route for parsing and saving token transfer events to the database
 app.get('/parse-events', async (req, res) => {
@@ -24,19 +28,7 @@ app.get('/parse-events', async (req, res) => {
     const contractABI = ['event Transfer(address indexed from, address indexed to, uint256 value)'];
     const contract = new ethers.Contract(contractAddress, contractABI, provider);
 
-    const filter = contract.filters.Transfer();
-    filter.fromBlock = "0x" + startBlock.toString(16);
-    filter.toBlock = "0x" + endBlock.toString(16);
-
     const events = await contract.queryFilter('Transfer', startBlock, endBlock);
-
-  // Save events to the MongoDB database
-  const Event = mongoose.model('Event', {
-    blockNumber: Number,
-    from: String,
-    to: String,
-    amount: String,
-  });
 
   for (const event of events) {
     const blockNumber = event.blockNumber;
@@ -51,8 +43,32 @@ app.get('/parse-events', async (req, res) => {
   res.send('Data saved to the database');
 });
 
-app.get('/events', async(req, res)=>{})
+app.get('/events', async(req, res)=>{
+  const pageNumber = req.query.pageNumber;
+  const pageSize = req.query.pageSize;
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+  const skipAmount = (pageNumber - 1) * pageSize;
+  try {
+    const events = (await Event.find().skip(skipAmount).limit(pageSize));
+    console.log(events);
+    res.send(events)
+  } catch (error) {
+    console.error('Error retrieving paginated events:', error);
+  }
+})
+
+const start = async () => {
+  try {
+      // Connecting to the database
+      await connectDB();
+      
+      app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+      });
+  } catch (error) {
+      console.log(error);
+      console.log("Failed to connect to the database, server is not running.");
+  }
+};
+
+start();
