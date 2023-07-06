@@ -49,9 +49,13 @@ app.get('/events', async(req, res)=>{
 
   const skipAmount = (pageNumber - 1) * pageSize;
   try {
-    const events = (await Event.find().skip(skipAmount).limit(pageSize));
+    const events = await Event.find() //.skip(skipAmount).limit(pageSize));
+    const count = await Event.countDocuments();
     console.log(events);
-    res.send(events)
+    res.send({
+      events,
+      total: count
+    })
   } catch (error) {
     console.error('Error retrieving paginated events:', error);
   }
