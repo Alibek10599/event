@@ -1,6 +1,5 @@
 // index.js
 const express = require('express');
-const mongoose = require('mongoose');
 const { ethers } = require('ethers');
 require('dotenv').config()
 
@@ -47,9 +46,9 @@ app.get('/events', async(req, res)=>{
   const pageNumber = req.query.pageNumber;
   const pageSize = req.query.pageSize;
 
-  const skipAmount = (pageNumber - 1) * pageSize;
+  const skipAmount = (pageNumber - 1) * pageSize; // ccan be ommented out as we are using client side pagination for now
   try {
-    const events = await Event.find() //.skip(skipAmount).limit(pageSize));
+    const events = await Event.find().skip(skipAmount).limit(pageSize); // can be commented out as we are as we are using client side pagination
     const count = await Event.countDocuments();
     console.log(events);
     res.send({
