@@ -8,8 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from '@mui/material/Button';
-
-import TablePagination from '@mui/material/TablePagination';
+import TablePagination from "@mui/material/TablePagination";
 
 
 
@@ -18,6 +17,20 @@ export default function App() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(false);
+
+  const initTransferEvents = (async ()=>{
+    setLoading(true);
+    try {
+      const response = await axios.get('http://localhost:9000/parse-events');
+      console.log('Fetched events:', response.data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
+      window.location.reload();
+    }
+  })
   
   const fetchData = useRef(async () => {
      await axios({
@@ -103,9 +116,8 @@ export default function App() {
         <Button 
         sx={{ mt:2, ml:3 }} 
         variant="contained"
-        onClick={() => {
-          alert('clicked');
-        }}
+        disabled={loading}
+        onClick={initTransferEvents}
         >Fetch Events</Button>
     </div>
   );
